@@ -4,7 +4,7 @@
 (ns ororo.core
   (:use [clojure.data.json :only [read-json pprint-json]]
         [clojure.string :only [join]])
-  (:require [clj-http.client :as http]))
+  (:require [org.httpkit.client :as http]))
 
 (def base-url "http://api.wunderground.com/api/")
 
@@ -38,11 +38,14 @@
   "Make an API call out of a key, some features (as keywords, or just one keyword),
    a location, and a 'sifting' function that will be applied to the resulting map."
   [key features location sift-fn]
-  (-> (create-url key features location)
-      (http/get {:headers {"Accept-Encoding" ""}})
-      :body
-      read-json
-      (sift sift-fn)))
+  (let [req (-> (create-url key features location)
+                (http/get {:headers {"Accept-Encoding" ""}}))]
+    (-> req
+        deref
+        :body
+        read-json
+        (sift sift-fn)
+        delay)))
 
 (defn- api-fn
   "Create a function that makes an API call based on a bit of info."
