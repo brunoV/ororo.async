@@ -42,7 +42,8 @@
 (defn api-call
   "Make an API call out of a key, some features (as keywords, or just one keyword),
    a location, and a 'sifting' function that will be applied to the resulting map.
-   Optionally accepts an options map that will be forwarded to httpkit's get."
+   Optionally accepts an options map that will be forwarded to httpkit's get.
+   Returns a promise."
   [key features location sift-fn & [opts]]
   (let [req-opts (merge {:headers {"Accept-Encoding" ""}} opts)
         req (-> (create-url key features location)
