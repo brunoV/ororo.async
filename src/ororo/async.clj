@@ -30,16 +30,23 @@
     (or (f m) (-> m :response :results))
     m))
 
+(defn- read-json [body]
+  "Parse JSON from a string. Returns nil if argument is nil."
+  ;; :key-fn keyword converts map keys into keywords
+  (and body (json/read-str body :key-fn clojure.core/keyword)))
+
 ;; Ororo provides a lot of functions for working with the wunderground API by default.
 ;; However, wunderground allows you to get more than one type of data in a single request.
 ;; This cuts down on API requests one has to make to get a lot of information. For those
 ;; situations, you can use this function to execute a request yourself.
 (defn api-call
   "Make an API call out of a key, some features (as keywords, or just one keyword),
-   a location, and a 'sifting' function that will be applied to the resulting map."
-  [key features location sift-fn]
-  (let [req (-> (create-url key features location)
-                (http/get {:headers {"Accept-Encoding" ""}}))]
+   a location, and a 'sifting' function that will be applied to the resulting map.
+   Optionally accepts an options map that will be forwarded to httpkit's get."
+  [key features location sift-fn & [opts]]
+  (let [req-opts (merge {:headers {"Accept-Encoding" ""}} opts)
+        req (-> (create-url key features location)
+                (http/get req-opts))]
     (-> req
         deref
         :body
@@ -50,8 +57,8 @@
 (defn- api-fn
   "Create a function that makes an API call based on a bit of info."
   [feature sift-fn]
-  (fn [key location]
-    (api-call key feature location sift-fn)))
+  (fn [key location & [opts]]
+    (api-call key feature location sift-fn opts)))
 
 ;; We're not going to generate these functions automatically, since that'd require
 ;; making things unnecessarily complex with macro. We wouldn't gain much either way.
@@ -112,5 +119,5 @@
 (defn history
   "Returns a summary of the observed weather for the specified date, which
    Should be a string of the format YYYYMMDD."
-  [key location date]
-  (api-call key (str "history_" date) location :history))
+  [key location date & [opts]]
+  (api-call key (str "history_" date) location :history opts))
