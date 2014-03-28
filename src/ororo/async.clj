@@ -2,9 +2,9 @@
 ;; not too large, so it can mostly be done automatically. Some pieces are a bit inconsistent
 ;; and are implemented differently.
 (ns ororo.async
-  (:use [clojure.data.json :only [read-json pprint-json]]
-        [clojure.string :only [join]])
-  (:require [org.httpkit.client :as http]))
+  (:use [clojure.string :only [join]])
+  (:require [org.httpkit.client :as http]
+            [clojure.data.json :as json]))
 
 (def base-url "http://api.wunderground.com/api/")
 
