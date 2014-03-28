@@ -54,7 +54,6 @@
    low temperatures, a string text forecast, and the conditions."
   (comp deref forecast-seven-day))
 
-;; This one is implemented a bit differently because it requires a date.
 (def history
   "Returns a summary of the observed weather for the specified date, which
    Should be a string of the format YYYYMMDD."
