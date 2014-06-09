@@ -35,6 +35,13 @@
   ;; :key-fn keyword converts map keys into keywords
   (and body (json/read-str body :key-fn clojure.core/keyword)))
 
+(defn- parse [sift-fn resp]
+  "Parse a response map to an ororo response using the provided sift function."
+  (-> resp
+      :body
+      read-json
+      (sift sift-fn)))
+
 ;; Ororo provides a lot of functions for working with the wunderground API by default.
 ;; However, wunderground allows you to get more than one type of data in a single request.
 ;; This cuts down on API requests one has to make to get a lot of information. For those
@@ -43,82 +50,94 @@
   "Make an API call out of a key, some features (as keywords, or just one keyword),
    a location, and a 'sifting' function that will be applied to the resulting map.
    Optionally accepts an options map that will be forwarded to httpkit's get.
-   Returns a promise."
-  [key features location sift-fn & [opts]]
-  (let [req-opts (merge {:headers {"Accept-Encoding" ""}} opts)
+   Returns a promise. "
+  [key features location sift-fn & [opts f]]
+  (let [req-opts (merge {:headers {" Accept-Encoding " " "}} opts)
         req (-> (create-url key features location)
-                (http/get req-opts))]
-    (-> req
+                (http/get req-opts (when f (comp f (partial parse sift-fn)))))]
+    (->> req
         deref
-        :body
-        read-json
-        (sift sift-fn)
+        (parse sift-fn)
         delay)))
 
-(defn- api-fn
-  "Create a function that makes an API call based on a bit of info."
-  [feature sift-fn]
-  (fn [key location & [opts]]
-    (api-call key feature location sift-fn opts)))
+;; Despite the original author's wishes, we are going to go with a macro to
+;; generate all the API endpoints.
 
-;; We're not going to generate these functions automatically, since that'd require
-;; making things unnecessarily complex with macro. We wouldn't gain much either way.
-;; Instead, we'll define each of our API functions separately using a convenient
-;; `api-fn` function and def. This is easier since we're on 1.3 and have inline
-;; docstrings in `def`.
-(def geolookup
-  "Returns the city name, zip code/postal code, latitude-longitude coordinates and
-   and nearby weather stations."
-  (api-fn :geolookup :location))
+;; This is so that we can provide an API whose signatures mirror httpkit's request
+;; methods, with two variadic overloaded versions: one that optionally takes a
+;; callback function and another one that takes an options map and a callback.
+;; Since it's not really possible in Clojure to have two overloaded versions
+;; of the same method, we dynamically introspect the type of the first argument
+;; and do the appropriate dispatch to api-call. This is what httpkit's request
+;; does in its macro too.
 
-(def conditions
-  "Returns the current temperature, weather condition, humidity, wind, 'feels like'
-   temperature, barometric pressure, and visibility."
-  (api-fn :conditions :current_observation))
+(defmacro ^:private defapi
+  " Installs a function that makes an API call based on a bit of info. "
+  [method doc feature sift-fn]
+  `(defn ~method
+     ~doc
+     ~'{:arglists '([key location & [opts callback]] [key location & [callback]])}
+     ~'[key location & [s1 s2]]
+     (if (or (fn? ~'s1) (instance? clojure.lang.MultiFn ~'s1))
+       (api-call ~'key ~feature ~'location ~sift-fn nil ~'s1)
+       (api-call ~'key ~feature ~'location ~sift-fn ~'s1 ~'s2))))
 
-(def forecast
-  "Returns a summar of the weather for the next 3 days. This includes high and low
-   temperatures, a string text forecast, and the conditions."
-  (api-fn :forecast :forecast))
+(defapi geolookup
+  " Returns the city name, zip code/postal code, latitude-longitude coordinates
+        and and nearby weather stations. "
+  :geolookup :location)
 
-(def astronomy "Returns the moon phase, sunrise, and sunset times."
-  (api-fn :astronomy :moon_phase))
+(defapi conditions
+  " Returns a summary of the weather for the next 3 days. This includes high and low temperatures,
+        a string text forecast, and the conditions. "
+  :conditions :current_observation)
 
-(def radar "Returns links to radar images."
-  (api-fn :radar :radar))
+(defapi forecast
+   " Returns a summar of the weather for the next 3 days. This includes high and low
+        temperatures, a string text forecast, and the conditions. "
+   :forecast :forecast)
 
-(def satellite "Returns links to visual and infrared satellite images."
-  (api-fn :satellite :satellite))
+(defapi astronomy " Returns the moon phase, sunrise, and sunset times. "
+   :astronomy :moon_phase)
 
-(def webcams
-  "Returns locations of nearby Personal Weather Stations and URLS for
-   images from their web cams."
-  (api-fn :webcams :webcams))
+(defapi radar " Returns links to radar images. "
+  :radar :radar)
 
-(def alerts
-  "Returns the short name description, expiration time, and a long text description
-   of a severe weather alert if one has been issued for the searched."
-  (api-fn :alerts :alerts))
+(defapi satellite " Returns links to visual and infrared satellite images. "
+  :satellite :satellite)
 
-(def hourly
-  "Returns an hourly forecast for the next 36 hours immediately following
-  the api request."
-  (api-fn :hourly :hourly_forecast))
+(defapi webcams
+  " Returns locations of nearby Personal Weather Stations and URLS for
+        images from their web cams. "
+  :webcams :webcams)
 
-(def yesterday "Returns a summary of the observed weather history for yesterday."
-  (api-fn :yesterday :history))
+(defapi alerts
+  " Returns the short name description, expiration time, and a long text description
+        of a severe weather alert if one has been issued for the searched. "
+  :alerts :alerts)
 
-(def hourly-seven-day "Returns an hourly forecast for the next 7 days."
-  (api-fn :hourly7day :hourly_forecast))
+(defapi hourly
+  " Returns an hourly forecast for the next 36 hours immediately following
+        the api request. "
+  :hourly :hourly_forecast)
 
-(def forecast-seven-day
-  "Returns a summary of the weather for the next 7 days. This includes high and
-   low temperatures, a string text forecast, and the conditions."
-  (api-fn :forecast7day :forecast))
+(defapi yesterday " Returns a summary of the observed weather history for yesterday. "
+  :yesterday :history)
+
+(defapi hourly-seven-day " Returns an hourly forecast for the next 7 days. "
+  :hourly7day :hourly_forecast)
+
+(defapi forecast-seven-day
+  " Returns a summary of the weather for the next 7 days. This includes high and
+        low temperatures, a string text forecast, and the conditions. "
+   :forecast7day :forecast)
 
 ;; This one is implemented a bit differently because it requires a date.
 (defn history
-  "Returns a summary of the observed weather for the specified date, which
-   Should be a string of the format YYYYMMDD."
-  [key location date & [opts]]
-  (api-call key (str "history_" date) location :history opts))
+  " Returns a summary of the observed weather for the specified date, which
+        Should be a string of the format YYYYMMDD. "
+  {:arglists '([key location date & [opts callback]] [key location date & [callback]])}
+  [key location date & [s1 s2]]
+  (if (or (fn? s1) (instance? clojure.lang.MultiFn s1))
+    (api-call key (str " history_ " date) location :history nil s1)
+    (api-call key (str " history_ " date) location :history s1 s2)))
