@@ -19,7 +19,7 @@
        "/q/"
        (.replace
         (if (string? location)
-          location
+          ^String location
           (join "/" (reverse location)))
         " "
         "_")
