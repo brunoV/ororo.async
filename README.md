@@ -29,7 +29,31 @@ The API functions usually return massive maps. There is no way in red hot hell t
     user=> (satellite "bd7953ef3c00c914" ["Eldridge" "Alabama"])
     {:image_url "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_ir4_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914", :image_url_ir4 "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_ir4_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914", :image_url_vis "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_vis_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914"}
 
+## Asynchronous requests
+
+This fork has a second namespace, `ororo.async`. It has an identical API as that of `ororo.core`, but instead of returning a map of the response (which blocks the caller until the request is fulfilled), it returns a [delay][delay] of it immediately.
+
+Here's an example:
+
+    user=> (require 'ororo.core.async :refer :all)
+    user=> (def api-key ...)
+    user=> (def weather (conditions api-key "Buenos Aires"))
+    user=> #<Delay@2bdb5c17: :pending>
+    ... // do something
+    user=> (:feelslike_string @weather)
+    69.6 F (20.9 C)
+
+The `conditions` function will return immediately, and the response is available by dereferencing.
+
+Alternatively, you can provide a callback function that will be called when the request completes. The function takes the return value of the api call:
+
+    => (conditions api-key "Buenos Aires, Argentina"
+         (fn [weather] (-> weather :feelslike_string println)))
+    => #<Delay@4241724c: :pending>
+    69.6 F (20.9 C)
 
 ## Installation
 
 In cake or leiningen: `:dependencies [[ororo "0.1.0-alpha1"]]`.
+
+[delay]: http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/delay
