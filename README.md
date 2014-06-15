@@ -1,6 +1,8 @@
-# Ororo
+# ororo.async
 
-A library for talking to the Wunderground API.
+A library for talking to the Wunderground API asynchronously.
+
+This is a fork of [ororo][ororo] that uses [httpkit][httpkit] instead of [clj-http][clj-http]. As a result, HTTP requests are asynchronous and will not block the caller's thread. The maximum trhoughput achievable therefore is much larger.
 
 It currently implements all of the [Wunderground Weather API](http://www.wunderground.com/weather/api/d/documentation.html), with the exception of autocomplete.
 
@@ -20,22 +22,22 @@ The API functions usually return massive maps. There is no way in red hot hell t
 
 *Note that I was stupid enough to commit my real API key below. Rather than bother fixing the repo (by breaking its history), I simply regenerated my key. As a result, the below examples won't work unless you replace my key with one of your own.*
 
-    user=> (use 'ororo.core)
+    user=> (use 'ororo.async)
     nil
-    user=> (radar "bd7953ef3c00c914" ["Eldridge" "Alabama"])
+    user=> @(radar "bd7953ef3c00c914" ["Eldridge" "Alabama"])
     {:image_url "http://resize.wunderground.com/cgi-bin/resize_convert?ox=gif&url=radblast/cgi-bin/radar/WUNIDS_composite%3Fcenterlat=33.92213058%26centerlon=-87.62310028%26radius=75%26newmaps=1%26smooth=1%26newmaps=1%26reproj.automerc=1%26api_key=bd7953ef3c00c914", :url "http://www.wunderground.com/radar/radblast.asp?ID=GWX&region=c4&lat=33.92213058&lon=-87.62310028"}
-    user=> (radar "bd7953ef3c00c914" "35554")
+    user=> @(radar "bd7953ef3c00c914" "35554")
     {:image_url "http://resize.wunderground.com/cgi-bin/resize_convert?ox=gif&url=radblast/cgi-bin/radar/WUNIDS_composite%3Fcenterlat=33.92213058%26centerlon=-87.62310028%26radius=75%26newmaps=1%26smooth=1%26newmaps=1%26reproj.automerc=1%26api_key=bd7953ef3c00c914", :url "http://www.wunderground.com/radar/radblast.asp?ID=GWX&region=c4&lat=33.92213058&lon=-87.62310028"}
-    user=> (satellite "bd7953ef3c00c914" ["Eldridge" "Alabama"])
+    user=> @(satellite "bd7953ef3c00c914" ["Eldridge" "Alabama"])
     {:image_url "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_ir4_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914", :image_url_ir4 "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_ir4_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914", :image_url_vis "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_vis_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914"}
 
 ## Asynchronous requests
 
-This fork has a second namespace, `ororo.async`. It has an identical API as that of `ororo.core`, but instead of returning a map of the response (which blocks the caller until the request is fulfilled), it returns a [delay][delay] of it immediately.
+This library has an identical API as that of [ororo][ororo], but instead of returning a map of the response (which blocks the caller until the request is fulfilled), it returns a [delay][delay] of it immediately.
 
 Here's an example:
 
-    user=> (require 'ororo.core.async :refer :all)
+    user=> (require 'ororo.async :refer :all)
     user=> (def api-key ...)
     user=> (def weather (conditions api-key "Buenos Aires"))
     user=> #<Delay@2bdb5c17: :pending>
@@ -43,9 +45,9 @@ Here's an example:
     user=> (:feelslike_string @weather)
     69.6 F (20.9 C)
 
-The `conditions` function will return immediately, and the response is available by dereferencing.
+Here, the `conditions` function returned immediately, and the response is available by dereferencing.
 
-Alternatively, you can provide a callback function that will be called when the request completes. The function takes the return value of the api call:
+Alternatively, you can provide a callback function that will be called when the request completes. The function takes the return value of the api call as argument:
 
     => (conditions api-key "Buenos Aires, Argentina"
          (fn [weather] (-> weather :feelslike_string println)))
@@ -54,6 +56,9 @@ Alternatively, you can provide a callback function that will be called when the 
 
 ## Installation
 
-In cake or leiningen: `:dependencies [[ororo "0.1.0-alpha1"]]`.
+In cake or leiningen: `:dependencies [[ororo.async "0.1.0"]]`.
 
-[delay]: http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/delay
+[delay]:    http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/delay
+[ororo]:    https://github.com/Raynes/ororo
+[httpkit]:  http://http-kit.org/
+[clj-http]: https://github.com/dakrone/clj-http
