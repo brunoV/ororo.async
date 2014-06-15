@@ -1,4 +1,4 @@
-(defproject ororo.async "0.1.0"
+(defproject ororo.async "0.1.1"
   :description "An asynchronous Wunderground API library."
   :url "https://github.com/brunoV/ororo.async"
   :license {:name "Eclipse Public License"
