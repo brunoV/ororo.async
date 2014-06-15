@@ -35,12 +35,18 @@
   ;; :key-fn keyword converts map keys into keywords
   (and body (json/read-str body :key-fn clojure.core/keyword)))
 
+(defn- assert-success [{:keys [status body] :as resp}]
+  (assert (<= 200 status 399)
+          (format "Response code is %s, body is:\n%s" status body))
+  resp)
+
 (defn- parse [sift-fn resp]
   "Parse a response map to an ororo response using the provided sift function."
-  (-> resp
-      :body
-      read-json
-      (sift sift-fn)))
+  (some-> resp
+          assert-success
+          :body
+          read-json
+          (sift sift-fn)))
 
 ;; Ororo provides a lot of functions for working with the wunderground API by default.
 ;; However, wunderground allows you to get more than one type of data in a single request.
