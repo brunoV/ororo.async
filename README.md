@@ -56,7 +56,7 @@ Alternatively, you can provide a callback function that will be called when the 
 
 ## Installation
 
-In cake or leiningen: `:dependencies [[ororo.async "0.1.1"]]`.
+In cake or leiningen: `:dependencies [[ororo.async "0.1.2"]]`.
 
 [delay]:    http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/delay
 [ororo]:    https://github.com/Raynes/ororo
