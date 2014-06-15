@@ -67,12 +67,12 @@
 ;; methods, with two variadic overloaded versions: one that optionally takes a
 ;; callback function and another one that takes an options map and a callback.
 ;; Since it's not really possible in Clojure to have two overloaded versions
-;; of the same method, we dynamically introspect the type of the first argument
+;; of a variadic method, we dynamically introspect the type of the first argument
 ;; and do the appropriate dispatch to api-call. This is what httpkit's request
 ;; does in its macro too.
 
 (defmacro ^:private defapi
-  " Installs a function that makes an API call based on a bit of info. "
+  "Installs a function that makes an API call based on a bit of info."
   [method doc feature sift-fn]
   `(defn ~method
      ~doc
@@ -83,59 +83,59 @@
        (api-call ~'key ~feature ~'location ~sift-fn ~'s1 ~'s2))))
 
 (defapi geolookup
-  " Returns the city name, zip code/postal code, latitude-longitude coordinates
-        and and nearby weather stations. "
+  "Returns the city name, zip code/postal code, latitude-longitude coordinates
+  and and nearby weather stations."
   :geolookup :location)
 
 (defapi conditions
-  " Returns a summary of the weather for the next 3 days. This includes high and low temperatures,
-        a string text forecast, and the conditions. "
+  "Returns a summary of the weather for the next 3 days. This includes high and low temperatures,
+   a string text forecast, and the conditions. "
   :conditions :current_observation)
 
 (defapi forecast
-   " Returns a summar of the weather for the next 3 days. This includes high and low
-        temperatures, a string text forecast, and the conditions. "
+   "Returns a summar of the weather for the next 3 days. This includes high and low
+    temperatures, a string text forecast, and the conditions. "
    :forecast :forecast)
 
-(defapi astronomy " Returns the moon phase, sunrise, and sunset times. "
+(defapi astronomy "Returns the moon phase, sunrise, and sunset times."
    :astronomy :moon_phase)
 
-(defapi radar " Returns links to radar images. "
+(defapi radar "Returns links to radar images."
   :radar :radar)
 
-(defapi satellite " Returns links to visual and infrared satellite images. "
+(defapi satellite "Returns links to visual and infrared satellite images."
   :satellite :satellite)
 
 (defapi webcams
-  " Returns locations of nearby Personal Weather Stations and URLS for
-        images from their web cams. "
+  "Returns locations of nearby Personal Weather Stations and URLS for
+   images from their web cams."
   :webcams :webcams)
 
 (defapi alerts
-  " Returns the short name description, expiration time, and a long text description
-        of a severe weather alert if one has been issued for the searched. "
+  "Returns the short name description, expiration time, and a long text description
+   of a severe weather alert if one has been issued for the searched."
   :alerts :alerts)
 
 (defapi hourly
-  " Returns an hourly forecast for the next 36 hours immediately following
-        the api request. "
+  "Returns an hourly forecast for the next 36 hours immediately following
+   the api request."
   :hourly :hourly_forecast)
 
-(defapi yesterday " Returns a summary of the observed weather history for yesterday. "
+(defapi yesterday "Returns a summary of the observed weather history for yesterday."
   :yesterday :history)
 
 (defapi hourly-seven-day " Returns an hourly forecast for the next 7 days. "
   :hourly7day :hourly_forecast)
 
 (defapi forecast-seven-day
-  " Returns a summary of the weather for the next 7 days. This includes high and
-        low temperatures, a string text forecast, and the conditions. "
+  "Returns a summary of the weather for the next 7 days. This includes high and
+   low temperatures, a string text forecast, and the conditions."
    :forecast7day :forecast)
 
 ;; This one is implemented a bit differently because it requires a date.
 (defn history
-  " Returns a summary of the observed weather for the specified date, which
-        Should be a string of the format YYYYMMDD. "
+  "Returns a summary of the observed weather for the specified date, which
+   Should be a string of the format YYYYMMDD."
   {:arglists '([key location date & [opts callback]] [key location date & [callback]])}
   [key location date & [s1 s2]]
   (if (or (fn? s1) (instance? clojure.lang.MultiFn s1))
