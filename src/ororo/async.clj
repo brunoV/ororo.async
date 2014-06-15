@@ -52,7 +52,7 @@
    Optionally accepts an options map that will be forwarded to httpkit's get.
    Returns a promise. "
   [key features location sift-fn & [opts f]]
-  (let [req-opts (merge {:headers {" Accept-Encoding " " "}} opts)
+  (let [req-opts (merge {:headers {"Accept-Encoding" ""}} opts)
         req (-> (create-url key features location)
                 (http/get req-opts (when f (comp f (partial parse sift-fn)))))]
     (->> req
