@@ -7,3 +7,9 @@ classes
 build
 /ororo
 .#*
+/target/
+
+# IntelliJ garbage
+.idea
+*.iml
+.nrepl-port
