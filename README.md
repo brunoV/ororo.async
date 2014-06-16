@@ -33,14 +33,14 @@ The API functions usually return massive maps. There is no way in red hot hell t
 
 ### Asynchronous requests
 
-This library has an identical API as that of [ororo][ororo], but instead of returning a map of the response (which blocks the caller until the request is fulfilled), it returns a [delay][delay] of it immediately.
+This library has an identical API as that of [ororo][ororo], but instead of returning a map of the response (which blocks the caller until the request is fulfilled), it returns a promise of it immediately.
 
 Here's an example:
 
     user=> (require 'ororo.async :refer :all)
     user=> (def api-key ...)
-    user=> (def weather (conditions api-key "Buenos Aires"))
-    user=> #<Delay@2bdb5c17: :pending>
+    user=> (def weather (conditions api-key "Buenos Aires, Argentina"))
+    (var ororo.async/weather)
     ... // do something
     user=> (:feelslike_string @weather)
     69.6 F (20.9 C)
@@ -50,15 +50,15 @@ Here, the `conditions` function returned immediately, and the response is availa
 Alternatively, you can provide a callback function that will be called when the request completes. The function takes the return value of the API call as argument:
 
     => (conditions api-key "Buenos Aires, Argentina"
-         (fn [weather] (-> weather :feelslike_string println)))
-    => #<Delay@4241724c: :pending>
-    69.6 F (20.9 C)
+         (fn [weather] (-> weather :feelslike_string)))
+    => #<core$promise$reify__6363@50f06b52: :pending>
+    => (deref *1)
+    => "69.6 F (20.9 C)"
 
 ## Installation
 
 In cake or leiningen: `:dependencies [[ororo.async "0.1.2"]]`.
 
-[delay]:    http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/delay
 [ororo]:    https://github.com/Raynes/ororo
 [httpkit]:  http://http-kit.org/
 [clj-http]: https://github.com/dakrone/clj-http

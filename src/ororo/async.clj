@@ -35,18 +35,20 @@
   ;; :key-fn keyword converts map keys into keywords
   (and body (json/read-str body :key-fn clojure.core/keyword)))
 
-(defn- assert-success [{:keys [status body] :as resp}]
-  (assert (<= 200 status 399)
-          (format "Response code is %s, body is:\n%s" status body))
-  resp)
+(defn success? [{:keys [status error]}]
+  "Whether the response is successful. A response can fail either by having an
+  :error or a status code of 400 or greater."
+  (not
+    (or error (>= status 400))))
 
 (defn- parse [sift-fn resp]
   "Parse a response map to an ororo response using the provided sift function."
-  (some-> resp
-          assert-success
-          :body
-          read-json
-          (sift sift-fn)))
+  (if (success? resp)
+    (-> resp
+        :body
+        read-json
+        (sift sift-fn))
+    (merge {:error (:status resp)} resp))) ; Always set :error if resp is not successful
 
 ;; Ororo provides a lot of functions for working with the wunderground API by default.
 ;; However, wunderground allows you to get more than one type of data in a single request.
@@ -56,15 +58,23 @@
   "Make an API call out of a key, some features (as keywords, or just one keyword),
    a location, and a 'sifting' function that will be applied to the resulting map.
    Optionally accepts an options map that will be forwarded to httpkit's get.
-   Returns a promise. "
+
+   Returns a promise with the result of calling the callback function f with the
+   response. If omitted, f will be identity.
+
+   If successful, the function will be called with the ororo response map. If the
+   request fails, the function will be called with the failed response, which is
+   guaranteed to have a non-nil :error. This is analogous to how
+   `httpkit/request` handles failures:
+
+       (f weather)            ; if successful
+       (f {:opts _ :error _}) ; if failed"
   [key features location sift-fn & [opts f]]
   (let [req-opts (merge {:headers {"Accept-Encoding" ""}} opts)
-        req (-> (create-url key features location)
-                (http/get req-opts (when f (comp f (partial parse sift-fn)))))]
-    (->> req
-        deref
-        (parse sift-fn)
-        delay)))
+        f (or f identity)
+        callback (comp f (partial parse sift-fn))
+        url (create-url key features location)]
+    (http/get url req-opts callback)))
 
 ;; Despite the original author's wishes, we are going to go with a macro to
 ;; generate all the API endpoints.
