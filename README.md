@@ -31,7 +31,7 @@ The API functions usually return massive maps. There is no way in red hot hell t
     user=> @(satellite "bd7953ef3c00c914" ["Eldridge" "Alabama"])
     {:image_url "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_ir4_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914", :image_url_ir4 "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_ir4_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914", :image_url_vis "http://wublast.wunderground.com/cgi-bin/WUBLAST?lat=33.92213058&lon=-87.62310028&radius=75&width=300&height=300&key=sat_vis_thumb&gtt=0&extension=png&proj=me&num=1&delay=25&timelabel=0&basemap=1&borders=1&theme=WUNIDS&rand=1318928092&api_key=bd7953ef3c00c914"}
 
-## Asynchronous requests
+### Asynchronous requests
 
 This library has an identical API as that of [ororo][ororo], but instead of returning a map of the response (which blocks the caller until the request is fulfilled), it returns a [delay][delay] of it immediately.
 
