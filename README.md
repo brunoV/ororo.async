@@ -2,7 +2,7 @@
 
 A library for talking to the Wunderground API asynchronously.
 
-This is a fork of [ororo][ororo] that uses [httpkit][httpkit] instead of [clj-http][clj-http]. As a result, HTTP requests are asynchronous and will not block the caller's thread. The maximum trhoughput achievable therefore is much larger.
+This is a fork of [ororo][ororo] that uses [httpkit][httpkit] instead of [clj-http][clj-http]. As a result, HTTP requests are asynchronous and will not block the caller's thread. The maximum throughput achievable therefore is much larger.
 
 It currently implements all of the [Wunderground Weather API](http://www.wunderground.com/weather/api/d/documentation.html), with the exception of autocomplete.
 
@@ -16,7 +16,7 @@ Ororo defines a function for each API 'feature'. Each API function (with the exc
 
 The `history` function takes an extra argument. It is a date of the format `"YYYYMMDD"`.
 
-The API functions usually return massive maps. There is no way in red hot hell that I can document each and every key that the API throws down. You're on your own with that one. Furthermore, `clojure.data.json` doesn't do much of anything to prettify json keys. They are ususally word separated by underscores rather than hyphens. I'm not sure it is worth the computational power to make these keys prettier.
+The API functions usually return massive maps. There is no way in red hot hell that I can document each and every key that the API throws down. You're on your own with that one. Furthermore, `clojure.data.json` doesn't do much of anything to prettify json keys. They are usually word separated by underscores rather than hyphens. I'm not sure it is worth the computational power to make these keys prettier.
 
 ### Examples
 
@@ -47,7 +47,7 @@ Here's an example:
 
 Here, the `conditions` function returned immediately, and the response is available by dereferencing.
 
-Alternatively, you can provide a callback function that will be called when the request completes. The function takes the return value of the api call as argument:
+Alternatively, you can provide a callback function that will be called when the request completes. The function takes the return value of the API call as argument:
 
     => (conditions api-key "Buenos Aires, Argentina"
          (fn [weather] (-> weather :feelslike_string println)))
