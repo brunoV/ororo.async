@@ -2,7 +2,7 @@
 
 A library for talking to the Wunderground API asynchronously.
 
-This is a fork of [ororo][ororo] that uses [httpkit][httpkit] instead of [clj-http][clj-http]. As a result, HTTP requests are asynchronous and will not block the caller's thread. The maximum throughput achievable therefore is much larger.
+This is a fork of [ororo][ororo] that uses [httpkit][httpkit] instead of [clj-http][clj-http]. As a result, HTTP requests are asynchronous and will not block any one thread. The maximum throughput achievable therefore is much larger.
 
 It currently implements all of the [Wunderground Weather API](http://www.wunderground.com/weather/api/d/documentation.html), with the exception of autocomplete.
 
